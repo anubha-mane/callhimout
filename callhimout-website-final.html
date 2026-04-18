@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call Him Out — Because silence protects him, not you.</title>
+<meta name="description" content="A global movement. Women reporting assault, harassment, and abuse via Telegram. Live data. Real stories. Because 62 million men proved we needed this.">
+<meta property="og:title" content="Call Him Out">
+<meta property="og:description" content="62 million views. Men drugging and assaulting their partners. Women are organized now.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#e8001c;
+  --red2:#ff1a35;
+  --black:#0a0a0a;
+  --white:#ffffff;
+  --off:#f5f5f5;
+  --grey:#e8e8e8;
+  --grey2:#cccccc;
+  --grey3:#888888;
+  --grey4:#444444;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);-webkit-font-smoothing:antialiased}
+
+/* EXIT */
+.exit{position:fixed;top:12px;right:12px;z-index:9999;background:var(--black);color:white;border:none;padding:7px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-family:'Inter',sans-serif;transition:opacity .2s}
+.exit:hover{opacity:.75}
+
+/* EBAR */
+.ebar{background:var(--red);color:white;text-align:center;padding:8px 3rem;font-size:11px;font-weight:600;letter-spacing:.4px}
+.ebar a{color:rgba(255,255,255,.85);text-decoration:underline;cursor:pointer}
+
+/* NAV */
+.nav{background:var(--black);padding:0 2rem;position:sticky;top:0;z-index:100}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;height:56px}
+.logo{cursor:pointer;flex-shrink:0;text-decoration:none}
+.logo-t{font-family:'Bebas Neue',sans-serif;font-size:24px;color:white;letter-spacing:3px}
+.logo-t span{color:var(--red)}
+.nav-links{display:flex;overflow-x:auto;margin-left:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nl{padding:0 14px;height:56px;display:flex;align-items:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;letter-spacing:1px;text-transform:uppercase}
+.nl:hover{color:white}
+.nl.on{color:white;border-bottom-color:var(--red)}
+.nav-cta{margin-left:1rem;background:var(--red);color:white;padding:8px 18px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;border-radius:4px;flex-shrink:0;transition:background .2s}
+.nav-cta:hover{background:var(--red2)}
+
+/* PAGES */
+.page{display:none;max-width:1200px;margin:0 auto;padding:0 2rem 6rem}
+.page.on{display:block;animation:up .3s ease}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ HERO ══ */
+.hero{
+  background:var(--black);
+  margin:0 -2rem;
+  padding:7rem 2rem 0;
+  min-height:640px;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+}
+.hero-lines{
+  position:absolute;inset:0;
+  background-image:repeating-linear-gradient(
+    90deg,transparent 0,transparent 80px,rgba(255,255,255,.015) 80px,rgba(255,255,255,.015) 81px
+  );
+  pointer-events:none;
+}
+.hero-glow{position:absolute;width:600px;height:400px;background:radial-gradient(ellipse,rgba(232,0,28,.15) 0,transparent 70%);top:-80px;right:-100px;pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:780px;padding-bottom:3.5rem}
+.hero-kicker{display:inline-flex;align-items:center;gap:10px;background:var(--red);color:white;font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:5px 14px;margin-bottom:1.75rem}
+.hero h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(56px,10vw,130px);
+  line-height:.92;
+  color:white;
+  letter-spacing:2px;
+  margin-bottom:1.75rem;
+}
+.hero h1 .stroke{-webkit-text-stroke:2px white;color:transparent}
+.hero h1 .red{color:var(--red)}
+.hero-body{font-size:16px;color:rgba(255,255,255,.5);line-height:1.8;font-weight:300;max-width:580px;margin-bottom:2.5rem}
+.hero-body strong{color:white;font-weight:600}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:0}
+.ha{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;letter-spacing:.4px;text-transform:uppercase}
+.ha-red{background:var(--red);color:white;border:none}
+.ha-red:hover{background:var(--red2)}
+.ha-white{background:white;color:var(--black);border:none}
+.ha-white:hover{background:var(--off)}
+.ha-ghost{background:transparent;color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.2)}
+.ha-ghost:hover{border-color:white;color:white}
+
+/* TICKER */
+.ticker{background:var(--red);margin:0 -2rem;padding:.9rem 2rem;display:flex;align-items:center;gap:3rem;flex-wrap:wrap;position:relative;z-index:1}
+.tk{display:flex;align-items:baseline;gap:8px}
+.tk-n{font-family:'Bebas Neue',sans-serif;font-size:26px;color:white;letter-spacing:1px;transition:all .3s}
+.tk-n.bump{color:rgba(255,255,255,.6)}
+.tk-l{font-size:11px;color:rgba(255,255,255,.65);font-weight:500}
+.tk-live{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.ldot{width:7px;height:7px;background:white;border-radius:50%;animation:blink 1.6s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* SECTION HEADS */
+.sh{display:flex;align-items:center;gap:14px;margin:3.5rem 0 1.75rem}
+.sh-t{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--black);letter-spacing:2px;white-space:nowrap}
+.sh-line{flex:1;height:1px;background:var(--grey)}
+.sh-note{font-size:11px;color:var(--grey3);white-space:nowrap;letter-spacing:.3px;font-weight:500}
+
+/* 62M STATEMENT */
+.statement{background:var(--black);color:white;padding:5rem 2rem;margin:4rem -2rem;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start;position:relative;overflow:hidden}
+.statement::before{content:'62M';position:absolute;right:-20px;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:clamp(140px,22vw,280px);color:rgba(255,255,255,.03);line-height:1;pointer-events:none;letter-spacing:-5px}
+.st-left{}
+.st-kicker{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:1rem}
+.st-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,13vw,150px);line-height:.88;letter-spacing:2px;color:white;margin-bottom:.5rem}
+.st-num span{color:var(--red)}
+.st-unit{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:2rem}
+.st-q{font-family:'DM Serif Display',serif;font-size:clamp(16px,2vw,20px);font-style:italic;color:rgba(255,255,255,.65);line-height:1.75;border-left:2px solid var(--red);padding-left:1.5rem;max-width:400px}
+.st-src{font-size:11px;color:rgba(255,255,255,.2);margin-top:.85rem;letter-spacing:.3px}
+.st-right{display:flex;flex-direction:column}
+.st-row{padding:1.25rem 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.st-row:first-child{padding-top:0}
+.st-row:last-child{border:none;padding-bottom:0}
+.st-rn{font-family:'Bebas Neue',sans-serif;font-size:42px;color:white;letter-spacing:1px;line-height:1;margin-bottom:.25rem}
+.st-rl{font-size:13px;color:rgba(255,255,255,.4);font-weight:300;line-height:1.5}
+.st-rsrc{font-size:10px;color:rgba(255,255,255,.2);margin-top:.15rem}
+
+/* STAT GRID */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--grey);margin-bottom:3rem}
+.sc{padding:1.5rem;background:var(--white);border-right:1px solid var(--grey);border-bottom:1px solid var(--grey)}
+.sc:nth-child(even){background:var(--off)}
+.sc-n{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--black);line-height:1;letter-spacing:1px;margin-bottom:.3rem;transition:color .3s}
+.sc-n.live-flash{color:var(--red)}
+.sc-l{font-size:10px;color:var(--grey3);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:.2rem}
+.sc-d{font-size:11px;color:var(--red);font-weight:600}
+
+/* HEATMAP */
+.heatmap-wrap{border:1px solid var(--grey);padding:1.5rem;margin-bottom:3rem;background:var(--white)}
+.heatmap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.heatmap-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey3)}
+.heatmap-legend{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--grey3)}
+.legend-grad{width:80px;height:8px;border-radius:2px;background:linear-gradient(90deg,#ffe0e0 0%,var(--red) 100%)}
+#world-svg{width:100%;height:auto;display:block}
+.country-base{fill:#eeeeee;stroke:white;stroke-width:.5;transition:fill .4s}
+.country-l1{fill:#ffc0c0}.country-l2{fill:#ff8080}.country-l3{fill:#e8001c}.country-l4{fill:#a00010}
+.country:hover{opacity:.8;cursor:pointer}
+
+/* BARS */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:3rem}
+.cc{border:1px solid var(--grey);padding:1.5rem}
+.cc-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey3);margin-bottom:1.25rem}
+.br{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bl{width:110px;font-size:12px;color:var(--grey4);font-weight:500;flex-shrink:0}
+.bt{flex:1;height:5px;background:var(--grey);overflow:hidden}
+.bf{height:100%;background:var(--black);width:0;transition:width 1.2s ease}
+.bf.red{background:var(--red)}
+.bv{width:40px;text-align:right;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0}
+
+/* STORIES */
+.stories{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-bottom:3rem}
+.story{border:1px solid var(--grey);padding:1.5rem;transition:border-color .15s}
+.story:hover{border-color:var(--red)}
+.story-tag{display:inline-flex;background:var(--red);color:white;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;margin-bottom:1rem}
+.story-q{font-family:'DM Serif Display',serif;font-size:15px;font-style:italic;color:var(--black);line-height:1.75;margin-bottom:.85rem}
+.story-who{font-size:12px;font-weight:600;color:var(--grey4)}
+.story-outcome{font-size:11px;color:var(--red);font-weight:600;margin-top:.3rem}
+
+/* MISSION */
+.mission{padding:4rem 0;border-top:1px solid var(--grey);border-bottom:1px solid var(--grey);margin-bottom:4rem}
+.mission-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}
+.mission-left h2{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1;margin-bottom:1.5rem}
+.mission-left h2 em{font-style:italic;font-family:'DM Serif Display',serif;color:var(--red);font-size:52px}
+.mission-left p{font-size:15px;color:var(--grey4);line-height:1.85;font-weight:300;margin-bottom:1rem}
+.mission-right{}
+.mission-item{border-bottom:1px solid var(--grey);padding:1.1rem 0}
+.mission-item:first-child{padding-top:0}
+.mission-item:last-child{border:none}
+.mission-n{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--red);margin-bottom:.2rem}
+.mission-t{font-size:13px;font-weight:600;color:var(--black);margin-bottom:.2rem}
+.mission-d{font-size:12px;color:var(--grey3);font-weight:300;line-height:1.6}
+
+/* HOW IT WORKS */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;border:1px solid var(--grey);margin-bottom:4rem}
+.how-item{padding:2rem 1.75rem;border-right:1px solid var(--grey)}
+.how-item:last-child{border-right:none}
+.how-num{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--red);line-height:1;margin-bottom:.75rem;letter-spacing:1px}
+.how-t{font-size:14px;font-weight:700;color:var(--black);margin-bottom:.5rem}
+.how-d{font-size:12px;color:var(--grey3);line-height:1.65;font-weight:300}
+
+/* JOIN CTA */
+.join{background:var(--black);color:white;padding:4rem 2rem;margin:0 -2rem;text-align:center}
+.join h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,80px);letter-spacing:2px;line-height:1;margin-bottom:1rem}
+.join h2 em{font-style:italic;font-family:'DM Serif Display',serif;color:var(--red)}
+.join p{font-size:15px;color:rgba(255,255,255,.45);max-width:520px;margin:0 auto 2rem;font-weight:300;line-height:1.75}
+.join-btns{display:flex;justify-content:center;flex-wrap:wrap;gap:12px}
+
+/* DRUG FACTS */
+.facts{background:var(--off);border:1px solid var(--grey);padding:2rem;margin-bottom:3rem}
+.facts-head{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:1rem}
+.facts-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:.85rem}
+.facts-body{font-size:13px;color:var(--grey4);line-height:1.8;font-weight:300;margin-bottom:1rem}
+.facts-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem}
+.fs{background:white;border:1px solid var(--grey);padding:1rem}
+.fs-n{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red);letter-spacing:1px;margin-bottom:.4rem}
+.fs-t{font-size:12px;font-weight:700;color:var(--black);margin-bottom:.2rem}
+.fs-d{font-size:11px;color:var(--grey3);line-height:1.6;font-weight:300}
+
+/* HELP */
+.help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:3rem}
+.hc{border:1px solid var(--grey);padding:1.25rem;transition:border-color .15s}
+.hc:hover{border-color:var(--red)}
+.hc-country{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey3);margin-bottom:.6rem}
+.hc-name{font-size:14px;font-weight:700;color:var(--black);margin-bottom:.25rem}
+.hc-desc{font-size:12px;color:var(--grey3);margin-bottom:.6rem;font-weight:300}
+.hc-num{display:inline-flex;background:var(--black);color:white;font-size:11px;font-weight:700;padding:3px 10px;letter-spacing:.5px;border-radius:3px}
+.hc-num.red{background:var(--red)}
+
+/* FUND */
+.fund-block{background:var(--black);color:white;padding:2.5rem;margin-bottom:1.5rem}
+.fund-n{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:2px;line-height:1;margin-bottom:.25rem}
+.fund-g{font-size:13px;color:rgba(255,255,255,.35);margin-bottom:1.25rem}
+.fund-bar{height:6px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:.85rem}
+.fund-fill{height:100%;background:var(--red);width:0;transition:width 1.4s ease}
+.fund-foot{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.35)}
+
+/* MISC */
+hr{border:none;border-top:1px solid var(--grey);margin:2rem 0}
+.alert{padding:12px 16px;font-size:13px;line-height:1.65;margin-bottom:1rem;border:1px solid;border-radius:6px}
+.al-lock{background:var(--off);border-color:var(--grey);color:var(--grey4)}
+.al-warn{background:#fff9ec;border-color:#e8d878;color:#6a5000}
+
+footer{background:var(--black);color:rgba(255,255,255,.3);text-align:center;padding:3rem 2rem;font-size:12px;line-height:2}
+footer a{color:rgba(255,255,255,.5);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.15)}
+.fexit{display:inline-block;margin-top:.85rem;color:rgba(255,255,255,.4);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;padding:6px 16px;border:1px solid rgba(255,255,255,.15);border-radius:4px}
+
+@media(max-width:700px){
+  .hero{padding:5rem 1.5rem 0;min-height:540px}
+  .ticker{padding:.75rem 1.5rem;gap:1.5rem}
+  .page{padding:0 1.25rem 5rem}
+  .statement{grid-template-columns:1fr;gap:2.5rem;padding:3.5rem 1.5rem;margin:3rem -1.25rem}
+  .mission-grid{grid-template-columns:1fr;gap:2.5rem}
+  .chart-row{grid-template-columns:1fr}
+  .how-grid{grid-template-columns:1fr}
+  .how-item{border-right:none;border-bottom:1px solid var(--grey)}
+  .how-item:last-child{border-bottom:none}
+  .sg{grid-template-columns:1fr 1fr}
+  .bl{width:80px}
+  .stories{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<button class="exit" onclick="qExit()">✕ Exit</button>
+
+<div class="ebar">
+  Immediate danger: <strong>112</strong> India &nbsp;·&nbsp; <strong>911</strong> USA &nbsp;·&nbsp; <a onclick="qExit()">Leave this page now</a>
+</div>
+
+<div class="nav">
+  <div class="nav-inner">
+    <div class="logo" onclick="go('home')">
+      <div class="logo-t">CALL <span>HIM</span> OUT</div>
+    </div>
+    <div class="nav-links">
+      <div class="nl on" onclick="go('home')" data-p="home">Home</div>
+      <div class="nl" onclick="go('data')" data-p="data">Data</div>
+      <div class="nl" onclick="go('stories')" data-p="stories">Stories</div>
+      <div class="nl" onclick="go('mission')" data-p="mission">Mission</div>
+      <div class="nl" onclick="go('help')" data-p="help">Help</div>
+    </div>
+    <button class="nav-cta" onclick="openTG()">Report on Telegram →</button>
+  </div>
+</div>
+
+
+<!-- ══════════════ HOME ══════════════ -->
+<div id="p-home" class="page on">
+
+  <div class="hero">
+    <div class="hero-lines"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-kicker">🚩 CNN Investigation · April 2026</div>
+      <h1>
+        <span class="stroke">THEY</span><br>
+        KNEW.<br>
+        <span class="red">CALL HIM OUT.</span>
+      </h1>
+      <p class="hero-body">
+        A CNN investigation exposed a global network where men drug and assault their partners, then <strong>share videos online for millions to watch.</strong> Not strangers in alleys. Husbands. Boyfriends. Colleagues. Dates. Women are done being silent. <strong>This is where we organize.</strong>
+      </p>
+      <div class="hero-actions">
+        <button class="ha ha-red" onclick="openTG()">🚩 Report on Telegram</button>
+        <button class="ha ha-white" onclick="go('stories')">Read their stories</button>
+        <button class="ha ha-ghost" onclick="go('data')">See the data</button>
+      </div>
+    </div>
+    <div class="ticker">
+      <div class="tk"><span class="tk-n" id="t-r">0</span><span class="tk-l">reports this month</span></div>
+      <div class="tk"><span class="tk-n" id="t-c">0</span><span class="tk-l">countries</span></div>
+      <div class="tk"><span class="tk-n" id="t-v">0</span><span class="tk-l">VibeChecks run</span></div>
+      <div class="tk-live"><div class="ldot"></div>Live · Just launched</div>
+    </div>
+  </div>
+
+  <!-- 62M STATEMENT -->
+  <div class="statement">
+    <div class="st-left">
+      <div class="st-kicker">CNN As Equals · April 2026</div>
+      <div class="st-num">62<span>M</span></div>
+      <div class="st-unit">visits in February alone · one website</div>
+      <blockquote class="st-q">Over 20,000 videos of women being assaulted while drugged unconscious. Men trading dosage advice. Selling "sleeping liquids" for €150. Livestreaming assaults for $20 a viewer. The platforms did nothing.</blockquote>
+      <div class="st-src">Source: CNN As Equals investigation · April 2026</div>
+    </div>
+    <div class="st-right">
+      <div class="st-row"><div class="st-rn">20,000+</div><div class="st-rl">assault videos on one site alone</div><div class="st-rsrc">CNN investigation</div></div>
+      <div class="st-row"><div class="st-rn">91%</div><div class="st-rl">of survivors personally knew their attacker</div><div class="st-rsrc">RAINN Statistics</div></div>
+      <div class="st-row"><div class="st-rn">23%</div><div class="st-rl">of recorded assaults: victim was unconscious or asleep</div><div class="st-rsrc">England &amp; Wales, March 2025</div></div>
+      <div class="st-row"><div class="st-rn">200+</div><div class="st-rl">times Gisèle Pelicot was raped by men her husband recruited online</div><div class="st-rsrc">Pelicot trial, 2024</div></div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="sh"><div class="sh-t">How it works</div><div class="sh-line"></div></div>
+  <div class="how-grid">
+    <div class="how-item">
+      <div class="how-num">01</div>
+      <div class="how-t">Report via Telegram</div>
+      <div class="how-d">Open our Telegram bot. Walk through a simple, anonymous flow. No account. No email. No forms. Your Telegram username is never stored.</div>
+    </div>
+    <div class="how-item">
+      <div class="how-num">02</div>
+      <div class="how-t">Search before a date</div>
+      <div class="how-d">On Telegram, type /search and a name or profile handle. Get anonymous pattern signals in seconds — no identities shared.</div>
+    </div>
+    <div class="how-item">
+      <div class="how-num">03</div>
+      <div class="how-t">Data goes public</div>
+      <div class="how-d">Every report feeds this dashboard in real time. The patterns become public data that journalists, NGOs, and governments can't ignore.</div>
+    </div>
+    <div class="how-item">
+      <div class="how-num">04</div>
+      <div class="how-t">Get alerts</div>
+      <div class="how-d">Subscribe on Telegram for safety tips, news alerts, and community updates. We push what matters directly to you.</div>
+    </div>
+  </div>
+
+  <!-- STAT PREVIEW -->
+  <div class="sh"><div class="sh-t">Live snapshot</div><div class="sh-line"></div><span class="sh-note">Full data in Data tab</span></div>
+  <div class="sg">
+    <div class="sc"><div class="sc-n" id="h-r">0</div><div class="sc-l">Reports this month</div><div class="sc-d" id="h-rd">Be the first to report</div></div>
+
+    <div class="sc"><div class="sc-n" id="h-v">0</div><div class="sc-l">VibeChecks run</div><div class="sc-d">This week</div></div>
+  </div>
+
+  <!-- STORIES PREVIEW -->
+  <div class="sh"><div class="sh-t">They spoke</div><div class="sh-line"></div><button onclick="go('stories')" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:700;color:var(--red);letter-spacing:.5px;text-transform:uppercase">All stories →</button></div>
+  <div class="stories">
+    <div class="story">
+      <div class="story-tag">🚩 Drug-facilitated assault</div>
+      <div class="story-q">"You don't expect anything other than innocence to come from your partner. I didn't realize I had to be afraid of who I lay next to."</div>
+      <div class="story-who">Zoe Watts · Devon, England</div>
+      <div class="story-outcome">Her husband served 11 years for rape, sexual assault, and drugging</div>
+    </div>
+    <div class="story">
+      <div class="story-tag">🚩 Gaslit. Years.</div>
+      <div class="story-q">"He told me I was imagining it. That I was crazy. The police saw a video of him assaulting me and said it looked like I was pretending to be asleep."</div>
+      <div class="story-who">Amanda Stanhope · Wigan, England</div>
+      <div class="story-outcome">Now speaks publicly to protect other women</div>
+    </div>
+    <div class="story">
+      <div class="story-tag">🚩 Filmed without consent</div>
+      <div class="story-q">"I can't conceive of the fact that a woman could be treated like slaughterhouse meat. Because in the end, that's what I was."</div>
+      <div class="story-who">Valentina · Northern Italy</div>
+      <div class="story-outcome">Her husband sentenced to 8 years in 2021</div>
+    </div>
+  </div>
+
+  <!-- JOIN CTA -->
+  <div class="join">
+    <h2>READY TO <em>CALL HIM OUT?</em></h2>
+    <p>Everything happens on Telegram. Anonymous. Instant. Global. No accounts, no forms, no exposure.</p>
+    <div class="join-btns">
+      <button class="ha ha-red" onclick="openTG()">Open Telegram bot →</button>
+      <button class="ha ha-ghost" onclick="go('mission')">Read our mission</button>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════ DATA ══════════════ -->
+<div id="p-data" class="page">
+
+  <div style="padding:2.5rem 0 2rem;border-bottom:1px solid var(--grey);margin-bottom:2.5rem">
+    <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:.85rem;display:flex;align-items:center;gap:10px"><span style="width:20px;height:2px;background:var(--red);display:inline-block"></span>Live · Anonymized · Public</div>
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,64px);letter-spacing:2px;line-height:1;margin-bottom:.85rem">THE DATA</h1>
+    <p style="font-size:14px;color:var(--grey4);font-weight:300;line-height:1.8;max-width:560px">Every report submitted via Telegram feeds this dashboard in real time. VibeCheck queries return anonymous risk signals — patterns from multiple reports, never individual accusations. All data is anonymous and aggregate. No individual is ever identified. Share freely — this is public record.</p>
+  </div>
+
+  <div class="alert al-lock">🔒 Zero individuals identified. All data is anonymous aggregate. Updates with every new Telegram report.</div>
+
+  <!-- LIVE STATS -->
+  <div class="sh"><div class="sh-t">Live statistics</div><div class="sh-line"></div><span style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red)"><div class="ldot" style="background:var(--red)"></div>Live</span></div>
+  <div class="sg">
+    <div class="sc"><div class="sc-n" id="d-r">0</div><div class="sc-l">Reports this month</div><div class="sc-d" id="d-rd">Via Telegram</div></div>
+    <div class="sc"><div class="sc-n" id="d-c">0</div><div class="sc-l">Countries reporting</div><div class="sc-d">Growing weekly</div></div>
+    <div class="sc"><div class="sc-n" id="d-v">0</div><div class="sc-l">VibeChecks this week</div><div class="sc-d">Before dates</div></div>
+  </div>
+
+  <!-- WORLD HEATMAP -->
+  <!-- GLOBAL RESEARCH CONTEXT — clearly labelled as external research, not our data -->
+  <div style="background:var(--off);border:1px solid var(--grey);padding:1.5rem;margin-bottom:2.5rem">
+    <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey3);margin-bottom:1rem">Global research context — not our platform data</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--grey)">
+      <div style="padding:1.25rem;border-right:1px solid var(--grey)"><div style="font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;color:var(--black)">91%</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grey3);margin-bottom:.2rem">Of survivors knew their attacker</div><div style="font-size:10px;color:var(--grey3)">Source: RAINN</div></div>
+      <div style="padding:1.25rem;border-right:1px solid var(--grey)"><div style="font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;color:var(--black)">43%</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grey3);margin-bottom:.2rem">Were intimate partners</div><div style="font-size:10px;color:var(--grey3)">England &amp; Wales, March 2025</div></div>
+      <div style="padding:1.25rem;border-right:1px solid var(--grey)"><div style="font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;color:var(--black)">23%</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grey3);margin-bottom:.2rem">Victim unconscious or asleep</div><div style="font-size:10px;color:var(--grey3)">England &amp; Wales, March 2025</div></div>
+      <div style="padding:1.25rem"><div style="font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;color:var(--black)">1 in 3</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grey3);margin-bottom:.2rem">Women experience violence globally</div><div style="font-size:10px;color:var(--grey3)">WHO Global Report</div></div>
+    </div>
+  </div>
+
+  <div class="sh"><div class="sh-t">Global heatmap</div><div class="sh-line"></div><span class="sh-note">Reports by country</span></div>
+  <div class="heatmap-wrap">
+    <div class="heatmap-head">
+      <div class="heatmap-title">Reports by country — all time</div>
+      <div class="heatmap-legend"><span>Fewer</span><div class="legend-grad"></div><span>More</span></div>
+    </div>
+    <!-- Simplified world SVG heatmap — key countries colored by report density -->
+    <svg id="world-svg" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+      <!-- Ocean background -->
+      <rect width="1000" height="500" fill="#f8f8f8"/>
+
+      <!-- NORTH AMERICA -->
+      <!-- USA - high density -->
+      <path class="country country-base" id="usa" d="M120,140 L220,130 L260,145 L280,160 L270,180 L240,195 L200,200 L160,195 L130,175 L110,155 Z" title="USA: 0 reports"/>
+      <!-- Canada -->
+      <path class="country country-base" d="M100,80 L230,70 L270,90 L280,120 L250,135 L220,130 L120,140 L90,120 L80,95 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Mexico -->
+      <path class="country country-base" d="M130,200 L200,195 L220,215 L210,235 L180,240 L150,230 L130,215 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+
+      <!-- SOUTH AMERICA -->
+      <!-- Brazil - l2 -->
+      <path class="country country-base" d="M230,265 L310,250 L340,270 L345,310 L320,350 L285,360 L250,345 L225,315 L220,285 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Rest of SA -->
+      <path class="country country-base" d="M200,255 L230,265 L220,285 L225,315 L210,340 L195,330 L185,305 L190,275 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+
+      <!-- EUROPE -->
+      <!-- UK - l2 -->
+      <path class="country country-base" id="uk" d="M415,100 L430,95 L435,110 L425,120 L412,115 Z" fill="#eeeeee" stroke="white" stroke-width=".5" title="UK: 0 reports"/>
+      <!-- France -->
+      <path class="country country-base" d="M420,118 L445,115 L455,130 L445,148 L425,150 L415,138 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Germany -->
+      <path class="country country-base" d="M450,108 L475,105 L480,120 L468,135 L450,132 L445,115 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Spain -->
+      <path class="country country-base" d="M415,150 L450,148 L455,162 L440,172 L415,168 L410,158 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Italy -->
+      <path class="country country-base" d="M455,135 L470,130 L478,145 L472,160 L460,165 L450,155 L452,142 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Poland -->
+      <path class="country country-base" d="M468,98 L495,95 L500,112 L485,120 L468,118 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Rest Europe -->
+      <ellipse cx="490" cy="130" rx="30" ry="18" fill="#eeeeee" stroke="white" stroke-width=".5" opacity=".6"/>
+
+      <!-- AFRICA -->
+      <!-- Nigeria -->
+      <path class="country country-base" d="M450,245 L475,242 L480,262 L465,272 L448,265 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- South Africa -->
+      <path class="country country-base" d="M460,345 L490,340 L495,360 L475,370 L455,362 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Africa base -->
+      <path class="country-base" d="M420,185 L505,180 L520,210 L515,280 L505,340 L490,380 L460,390 L430,375 L415,330 L405,265 L408,215 Z" fill="#f0f0f0" stroke="white" stroke-width=".5" opacity=".4"/>
+
+      <!-- MIDDLE EAST -->
+      <path class="country country-base" d="M530,150 L580,145 L590,165 L570,180 L535,178 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+
+      <!-- ASIA -->
+      <!-- India - l3 (highest) -->
+      <path class="country country-base" id="india" d="M600,165 L650,158 L665,178 L660,215 L640,245 L618,255 L598,240 L590,210 L592,185 Z" fill="#f0f0f0" stroke="white" stroke-width=".5" title="India: 0 reports"/>
+      <!-- Pakistan -->
+      <path class="country country-base" d="M568,155 L600,152 L605,168 L590,182 L568,178 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- China -->
+      <path class="country country-base" d="M660,115 L740,110 L755,135 L745,165 L710,175 L675,168 L658,148 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Russia (simplified) -->
+      <path class="country-base" d="M490,55 L790,45 L800,100 L760,120 L700,115 L620,110 L545,108 L500,95 Z" fill="#f8f8f8" stroke="white" stroke-width=".5" opacity=".5"/>
+      <!-- Southeast Asia -->
+      <path class="country country-base" d="M710,200 L755,195 L762,220 L740,232 L712,225 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+      <!-- Japan -->
+      <path class="country country-base" d="M770,120 L785,115 L790,132 L778,140 L768,135 Z" fill="#eeeeee" stroke="white" stroke-width=".5"/>
+
+      <!-- AUSTRALIA -->
+      <!-- Australia - l2 -->
+      <path class="country country-base" id="aus" d="M720,320 L810,312 L830,335 L825,370 L800,390 L760,395 L730,375 L715,348 Z" fill="#eeeeee" stroke="white" stroke-width=".5" title="Australia: 0 reports"/>
+
+      <!-- COUNTRY LABELS for key countries -->
+      <text x="190" y="168" fill="white" font-size="9" font-weight="700" font-family="Inter,sans-serif" text-anchor="middle" opacity=".9">USA</text>
+      <text x="625" y="205" fill="white" font-size="9" font-weight="700" font-family="Inter,sans-serif" text-anchor="middle" opacity=".9">INDIA</text>
+      <text x="769" y="355" fill="white" font-size="8" font-weight="700" font-family="Inter,sans-serif" text-anchor="middle" opacity=".9">AUSTRALIA</text>
+      <text x="421" y="108" fill="white" font-size="7" font-weight="700" font-family="Inter,sans-serif" text-anchor="middle" opacity=".9">UK</text>
+    </svg>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:1.25rem">
+      <div style="font-size:12px"><span style="display:inline-block;width:10px;height:10px;background:#e8001c;margin-right:6px;border-radius:1px"></span><span data-country="India">India: 0</span></div>
+      <div style="font-size:12px"><span style="display:inline-block;width:10px;height:10px;background:#ff8080;margin-right:6px;border-radius:1px"></span><span data-country="USA">USA: 0</span></div>
+      <div style="font-size:12px"><span style="display:inline-block;width:10px;height:10px;background:#ff8080;margin-right:6px;border-radius:1px"></span><span data-country="UK">UK: 0</span></div>
+      <div style="font-size:12px"><span style="display:inline-block;width:10px;height:10px;background:#ff8080;margin-right:6px;border-radius:1px"></span><span data-country="Brazil">Brazil: 0</span></div>
+      <div style="font-size:12px"><span style="display:inline-block;width:10px;height:10px;background:#ff8080;margin-right:6px;border-radius:1px"></span><span data-country="Australia">Australia: 0</span></div>
+      <div style="font-size:12px"><span style="display:inline-block;width:10px;height:10px;background:#ffc0c0;margin-right:6px;border-radius:1px"></span><span data-country="Others">Others: 0</span></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="chart-row">
+    <div class="cc">
+      <div class="cc-head">Incident types — global research benchmarks</div>
+      <div id="incident-note" style="font-size:11px;color:var(--grey3);margin-bottom:1rem;font-style:italic">Showing global research data. Will update with our live data as reports come in.</div>
+      <div class="br"><span class="bl">Partner abuse</span><div class="bt"><div class="bf red" data-w="78%"></div></div><span class="bv">38%</span></div>
+      <div class="br"><span class="bl">Sexual assault</span><div class="bt"><div class="bf red" data-w="55%"></div></div><span class="bv">27%</span></div>
+      <div class="br"><span class="bl">Harassment</span><div class="bt"><div class="bf red" data-w="39%"></div></div><span class="bv">19%</span></div>
+      <div class="br"><span class="bl">Stalking</span><div class="bt"><div class="bf red" data-w="20%"></div></div><span class="bv">10%</span></div>
+      <div class="br"><span class="bl">Drugging</span><div class="bt"><div class="bf red" data-w="12%"></div></div><span class="bv">6%</span></div>
+    </div>
+    <div class="cc">
+      <div class="cc-head">Perpetrator relationship — global research benchmarks</div>
+      <div style="font-size:11px;color:var(--grey3);margin-bottom:1rem;font-style:italic">Source: RAINN, England &amp; Wales data 2025.</div>
+      <div class="br"><span class="bl">Intimate partner</span><div class="bt"><div class="bf" data-w="87%"></div></div><span class="bv">43%</span></div>
+      <div class="br"><span class="bl">Colleague/boss</span><div class="bt"><div class="bf" data-w="47%"></div></div><span class="bv">23%</span></div>
+      <div class="br"><span class="bl">Date/app match</span><div class="bt"><div class="bf" data-w="33%"></div></div><span class="bv">16%</span></div>
+      <div class="br"><span class="bl">Family member</span><div class="bt"><div class="bf" data-w="18%"></div></div><span class="bv">9%</span></div>
+      <div class="br"><span class="bl">Stranger</span><div class="bt"><div class="bf" data-w="18%"></div></div><span class="bv">9%</span></div>
+    </div>
+  </div>
+
+  <!-- BEHAVIOURAL PATTERNS -->
+  <div class="cc" style="margin-bottom:3rem">
+    <div class="cc-head">Behavioral patterns — global research benchmarks</div>
+    <div style="font-size:11px;color:var(--grey3);margin-bottom:1rem;font-style:italic">Source: WHO, RAINN, CNN As Equals investigation.</div>
+    <div class="br"><span class="bl" style="width:180px">Physical violence</span><div class="bt"><div class="bf" data-w="72%"></div></div><span class="bv">72%</span></div>
+    <div class="br"><span class="bl" style="width:180px">Coercion/threats</span><div class="bt"><div class="bf" data-w="58%"></div></div><span class="bv">58%</span></div>
+    <div class="br"><span class="bl" style="width:180px">Isolation tactics</span><div class="bt"><div class="bf" data-w="44%"></div></div><span class="bv">44%</span></div>
+    <div class="br"><span class="bl" style="width:180px">Alcohol/drugging</span><div class="bt"><div class="bf" data-w="38%"></div></div><span class="bv">38%</span></div>
+    <div class="br"><span class="bl" style="width:180px">Online harassment</span><div class="bt"><div class="bf" data-w="31%"></div></div><span class="bv">31%</span></div>
+    <div class="br"><span class="bl" style="width:180px">Non-consensual content</span><div class="bt"><div class="bf" data-w="22%"></div></div><span class="bv">22%</span></div>
+  </div>
+
+  <div class="alert al-lock">📢 This data is public and freely shareable. Journalists, researchers, NGOs — cite Call Him Out. For data partnerships, press, or NGO collaborations — reach out via Telegram</div>
+</div>
+
+
+<!-- ══════════════ STORIES ══════════════ -->
+<div id="p-stories" class="page">
+
+  <div style="padding:2.5rem 0 2rem;border-bottom:1px solid var(--grey);margin-bottom:2.5rem">
+    <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:.85rem;display:flex;align-items:center;gap:10px"><span style="width:20px;height:2px;background:var(--red);display:inline-block"></span>Real women. Real names.</div>
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,64px);letter-spacing:2px;line-height:1;margin-bottom:.85rem">THEY SPOKE.</h1>
+    <p style="font-size:14px;color:var(--grey4);font-weight:300;line-height:1.8;max-width:560px">These women chose to be named. Their courage is the reason this platform exists.</p>
+  </div>
+
+  <!-- GISELE FEATURE -->
+  <div style="background:var(--black);color:white;padding:2.5rem;margin-bottom:2rem">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:.75rem">Gisèle Pelicot · France · 2024</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,4vw,42px);letter-spacing:2px;margin-bottom:1rem;line-height:1">"SHAME MUST CHANGE SIDES."</div>
+    <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.85;font-weight:300;max-width:620px">Drugged unconscious by her husband Dominique over years, then raped by 72 men he recruited through online networks. She chose to make her trial public — explicitly so that other women could see what happened to them was not their fault. Her husband and 50 other men were convicted. Her words became a global rallying cry.</p>
+  </div>
+
+  <!-- CNN SOURCE ATTRIBUTION -->
+  <div style="background:var(--off);border-left:3px solid var(--red);padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:var(--grey4);line-height:1.75">
+    <strong style="display:block;margin-bottom:.25rem;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--red)">Source: CNN As Equals Investigation · April 2026</strong>
+    The following accounts are from a months-long CNN investigation that exposed a global network of men drugging and assaulting their partners. These women chose to be named publicly. Their courage inspired this platform.
+    <a href="https://edition.cnn.com" target="_blank" style="color:var(--red);font-weight:700;display:block;margin-top:.5rem;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Read the full CNN investigation →</a>
+  </div>
+
+  <div class="stories" style="margin-bottom:2rem">
+    <div class="story">
+      <div class="story-tag">🚩 Drug-facilitated assault · Partner</div>
+      <div class="story-q">"We worry about who's coming behind us in a car park. We don't worry about who we lie next to. I didn't realize I had to."</div>
+      <div class="story-who">Zoe Watts · Devon, England</div>
+      <div class="story-outcome">Husband served 11 years for rape, sexual assault, and drugging</div>
+    </div>
+    <div class="story">
+      <div class="story-tag">🚩 Drugged · Gaslit · Partner abuse</div>
+      <div class="story-q">"Even though I felt 100% sure that something had happened — he was trying to change my reality. The police saw a video and said it looked like I was pretending to be asleep."</div>
+      <div class="story-who">Amanda Stanhope · Wigan, England</div>
+      <div class="story-outcome">Now speaks publicly. "If Gisèle can do it, so can I."</div>
+    </div>
+    <div class="story">
+      <div class="story-tag">🚩 Filmed without consent · 20 years</div>
+      <div class="story-q">"I was lucky to find the videos. Without them, who would have believed me? No matter how much you try to brush it off, it's always right there beside you."</div>
+      <div class="story-who">Valentina · Northern Italy</div>
+      <div class="story-outcome">Husband sentenced to 8 years in 2021</div>
+    </div>
+  </div>
+
+  <!-- SHARE YOUR STORY CTA -->
+  <div style="border:2px solid var(--black);padding:1.75rem;text-align:center;margin-bottom:2.5rem">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:.5rem">THEIR COURAGE IS A STARTING POINT.</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--red);margin-bottom:1rem">YOURS IS THE MOVEMENT.</div>
+    <p style="font-size:14px;color:var(--grey4);margin-bottom:1.5rem;font-weight:300;max-width:440px;margin-left:auto;margin-right:auto">Share your experience anonymously via Telegram. No names. No judgment. Just your truth — and the women it protects.</p>
+    <button class="ha ha-red" onclick="openTG()" style="margin:0 auto">Share yours on Telegram →</button>
+  </div>
+
+  <!-- COMMUNITY STORIES (dynamic from Firebase) -->
+  <div class="sh"><div class="sh-t">From our community</div><div class="sh-line"></div><span class="sh-note">Anonymous · Verified via Telegram</span></div>
+  <div id="community-stories">
+    <div style="text-align:center;padding:3rem 1.5rem;border:1px dashed var(--grey2);color:var(--grey3)">
+      <div style="font-size:32px;margin-bottom:1rem">🚩</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--black);margin-bottom:.5rem">BE THE FIRST.</div>
+      <div style="font-size:13px;line-height:1.75;max-width:340px;margin:0 auto .25rem">These women above spoke publicly. You don't have to.<br>Share anonymously via Telegram — your words stay private, your story becomes a shield for the next woman.</div>
+    </div>
+  </div>
+
+  <!-- DRUG FACTS -->
+  <div class="sh" style="margin-top:3rem"><div class="sh-t">Know the signs</div><div class="sh-line"></div></div>
+  <div class="facts">
+    <div class="facts-head">Drug-facilitated sexual assault (DFSA)</div>
+    <div class="facts-title">HOW TO RECOGNIZE IT. WHAT TO DO.</div>
+    <div class="facts-body">Perpetrators are increasingly using common prescription sedatives — zolpidem (Ambien), benzodiazepines — because they're readily available and leave the body quickly. Signs: sudden unexplained drowsiness, memory gaps, waking in different clothes or positions, unexplained bruises, your drink tasting different.</div>
+    <div class="facts-steps">
+      <div class="fs"><div class="fs-n">01</div><div class="fs-t">Tell someone now</div><div class="fs-d">Don't be alone. Get to a safe place immediately.</div></div>
+      <div class="fs"><div class="fs-n">02</div><div class="fs-t">Go to hospital</div><div class="fs-d">Many drugs leave the body within 12–72 hours. Time is critical.</div></div>
+      <div class="fs"><div class="fs-n">03</div><div class="fs-t">Don't shower</div><div class="fs-d">Preserve evidence if you can. Don't change clothes.</div></div>
+      <div class="fs"><div class="fs-n">04</div><div class="fs-t">Report to police</div><div class="fs-d">Keep any suspected drink or substance for testing.</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--grey3);margin-top:1.25rem">Source: CNN As Equals investigation · Stanford University · Michel Cramer Bornemann MD</div>
+  </div>
+
+  <!-- ADD YOUR STORY -->
+  <div style="background:var(--black);color:white;padding:2.5rem;text-align:center;margin-top:2rem">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,4vw,40px);letter-spacing:2px;margin-bottom:.75rem;line-height:1">YOUR STORY CAN PROTECT THE NEXT WOMAN</div>
+    <p style="font-size:14px;color:rgba(255,255,255,.45);margin-bottom:1.75rem;font-weight:300">Anonymous. Verified. No names stored. Report via Telegram in under 2 minutes.</p>
+    <button class="ha ha-red" onclick="openTG()">Share on Telegram →</button>
+  </div>
+</div>
+
+
+<!-- ══════════════ MISSION ══════════════ -->
+<div id="p-mission" class="page">
+
+  <div style="padding:2.5rem 0 2rem;border-bottom:1px solid var(--grey);margin-bottom:2.5rem">
+    <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:.85rem;display:flex;align-items:center;gap:10px"><span style="width:20px;height:2px;background:var(--red);display:inline-block"></span>Why we exist</div>
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,64px);letter-spacing:2px;line-height:1;margin-bottom:.85rem">THE MISSION</h1>
+    <p style="font-size:14px;color:var(--grey4);font-weight:300;line-height:1.8;max-width:560px">We built this the week the CNN story broke. Not because we were surprised. Because we were done scrolling past it.</p>
+  </div>
+
+  <div class="mission">
+    <div class="mission-grid">
+      <div class="mission-left">
+        <h2>BUILT WITH<br><em>RAGE.</em><br>AND LOVE.</h2>
+        <p>In April 2026, CNN's As Equals team published a months-long investigation into a global network of men who drug and assault their partners, then share and sell content online. One website had 62 million visits in a single month. The platforms did nothing. Governments moved slowly.</p>
+        <p>We built Call Him Out because women needed a tool that worked now, not after the next hearing. A place to report without being disbelieved. To warn each other before a date. To see that they are not alone — that this is not personal failure, it is a systemic emergency.</p>
+        <p>We built it on Telegram because it's already where women are. Because it works globally without an app download. Because it means you can report in 90 seconds from a locked bathroom if you have to.</p>
+        <p>The website is the public record. Every report feeds it. Every number on the dashboard is a woman who refused to be silent.</p>
+        <p style="font-style:italic;color:var(--grey4)">"Shame must change sides." — Gisèle Pelicot</p>
+      </div>
+      <div class="mission-right">
+        <div class="mission-item"><div class="mission-n">Anonymous</div><div class="mission-t">No names. No IPs. No exposure.</div><div class="mission-d">Your Telegram username is never stored. Reports are fully anonymized before entering our database.</div></div>
+        <div class="mission-item"><div class="mission-n">Global</div><div class="mission-t">Works in every country.</div><div class="mission-d">Telegram works worldwide. The database captures patterns globally — giving us data that local systems don't.</div></div>
+        <div class="mission-item"><div class="mission-n">Collective</div><div class="mission-t">Women protecting women.</div><div class="mission-d">Every report makes the VibeCheck search more accurate. Every submission protects the next woman.</div></div>
+        <div class="mission-item"><div class="mission-n">Public</div><div class="mission-t">Data that can't be ignored.</div><div class="mission-d">Our dashboard is public record. Journalists, NGOs, governments can cite it. That's how patterns become policy.</div></div>
+        <div class="mission-item"><div class="mission-n">Free</div><div class="mission-t">Forever.</div><div class="mission-d">This platform will always be free for women to use. Fund it if you can. Use it regardless.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--black);color:white;padding:2.5rem;margin-bottom:3rem">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:1rem">The CNN investigation that started this</div>
+    <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.85;font-weight:300;margin-bottom:1rem">CNN As Equals investigated a global network of men who use online platforms to share advice on drugging partners, trade videos of assault, and buy and sell "sleeping liquids." They found chat groups with dosage tips, men livestreaming assaults for $20 a viewer with cryptocurrency payment, and a website with 62 million visits in February 2026 alone — whose core audience is in the United States.</p>
+    <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.85;font-weight:300;margin-bottom:1.5rem">Survivors Zoe Watts, Amanda Stanhope, and Valentina shared their stories. All three were abused by intimate partners. All three were disbelieved at some point — by police, by family, by themselves. None of this is rare. The data says so.</p>
+    <a href="https://edition.cnn.com" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--red);color:white;padding:10px 20px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;text-decoration:none">Read the CNN investigation →</a>
+  </div>
+
+  <!-- FUND -->
+  <div class="sh"><div class="sh-t">Fund the fight</div><div class="sh-line"></div></div>
+  <div class="fund-block">
+    <div class="fund-n">₹0</div>
+    <div class="fund-g">of ₹10,00,000 goal · just launched</div>
+    <div class="fund-bar"><div class="fund-fill" id="fund-fill"></div></div>
+    <div class="fund-foot"><span>0% funded</span><span>0 supporters</span><span>Be the first</span></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--grey);margin-bottom:3rem">
+    <div style="padding:1.25rem;border-right:1px solid var(--grey)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:.4rem">45%</div><div style="font-size:12px;font-weight:700;color:var(--grey4);margin-bottom:.2rem">Legal aid for survivors</div><div style="font-size:11px;color:var(--grey3)">Funding legal costs for women pursuing charges</div></div>
+    <div style="padding:1.25rem;border-right:1px solid var(--grey)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:.4rem">30%</div><div style="font-size:12px;font-weight:700;color:var(--grey4);margin-bottom:.2rem">Platform and security</div><div style="font-size:11px;color:var(--grey3)">Keeping the bot and website running securely</div></div>
+    <div style="padding:1.25rem;border-right:1px solid var(--grey);border-top:1px solid var(--grey)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:.4rem">15%</div><div style="font-size:12px;font-weight:700;color:var(--grey4);margin-bottom:.2rem">Counseling partnerships</div><div style="font-size:11px;color:var(--grey3)">Connecting survivors with professional support</div></div>
+    <div style="padding:1.25rem;border-top:1px solid var(--grey)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:.4rem">10%</div><div style="font-size:12px;font-weight:700;color:var(--grey4);margin-bottom:.2rem">Awareness</div><div style="font-size:11px;color:var(--grey3)">Getting this platform in front of every woman who needs it</div></div>
+  </div>
+  <button class="ha ha-red" onclick="openTG()">Donate via Telegram →</button>
+</div>
+
+
+<!-- ══════════════ HELP ══════════════ -->
+<div id="p-help" class="page">
+
+  <div style="padding:2.5rem 0 2rem;border-bottom:1px solid var(--grey);margin-bottom:2.5rem">
+    <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:.85rem;display:flex;align-items:center;gap:10px"><span style="width:20px;height:2px;background:var(--red);display:inline-block"></span>You are not alone</div>
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,64px);letter-spacing:2px;line-height:1;margin-bottom:.85rem">GET HELP</h1>
+    <p style="font-size:14px;color:var(--grey4);font-weight:300;line-height:1.8;max-width:560px">Real helplines. Legal aid. Shelter. You don't have to figure this out alone. Call now if you need to.</p>
+  </div>
+
+  <div class="sh"><div class="sh-t">India</div><div class="sh-line"></div></div>
+  <div class="help-grid">
+    <div class="hc"><div class="hc-country">India · 24/7</div><div class="hc-name">iCall</div><div class="hc-desc">Psychological counseling and crisis support</div><span class="hc-num">9152987821</span></div>
+    <div class="hc"><div class="hc-country">India · 24/7</div><div class="hc-name">Women's Helpline</div><div class="hc-desc">National women in distress helpline</div><span class="hc-num">181</span></div>
+    <div class="hc"><div class="hc-country">India · Emergency</div><div class="hc-name">Police Emergency</div><div class="hc-desc">Immediate emergency response</div><span class="hc-num red">100 · 112</span></div>
+    <div class="hc"><div class="hc-country">India</div><div class="hc-name">One Stop Centres</div><div class="hc-desc">Shelter, legal, medical and counseling</div><span class="hc-num">wcd.nic.in/OSC</span></div>
+    <div class="hc"><div class="hc-country">India</div><div class="hc-name">iHollaback India</div><div class="hc-desc">Harassment reporting and legal guidance</div><span class="hc-num">ihollaback.org</span></div>
+  </div>
+
+  <div class="sh"><div class="sh-t">International</div><div class="sh-line"></div></div>
+  <div class="help-grid">
+    <div class="hc"><div class="hc-country">USA · 24/7</div><div class="hc-name">RAINN</div><div class="hc-desc">National Sexual Assault Hotline</div><span class="hc-num">1-800-656-4673</span></div>
+    <div class="hc"><div class="hc-country">UK · 24/7</div><div class="hc-name">Rape Crisis England and Wales</div><div class="hc-desc">Free confidential support</div><span class="hc-num">0808 802 9999</span></div>
+    <div class="hc"><div class="hc-country">UK · 24/7</div><div class="hc-name">National DV Helpline</div><div class="hc-desc">Domestic violence support</div><span class="hc-num">0808 2000 247</span></div>
+    <div class="hc"><div class="hc-country">Global</div><div class="hc-name">UN Women Directory</div><div class="hc-desc">Country-by-country resources</div><span class="hc-num">unwomen.org</span></div>
+  </div>
+
+  <div class="sh"><div class="sh-t">Volunteer</div><div class="sh-line"></div></div>
+  <div style="background:var(--off);border:1px solid var(--grey);padding:2rem;margin-bottom:3rem">
+    <p style="font-size:14px;color:var(--grey4);margin-bottom:1.5rem;line-height:1.8;font-weight:300">Join our volunteer network as a counselor, legal aid volunteer, safe-house host, translator, or tech contributor. Your details stay completely private.</p>
+    <button class="ha ha-red" onclick="openTG()">Join via Telegram →</button>
+  </div>
+</div>
+
+
+<footer>
+  Call Him Out · Women's Safety Platform<br>
+  All reports are anonymous · No data is sold · Women only · Powered by Telegram<br>
+  Contact us via our Telegram bot →<br>
+  <div style="font-size:11px;margin-top:.5rem;color:rgba(255,255,255,.2)">Inspired by Gisèle Pelicot, Zoe Watts, Amanda Stanhope, and Valentina.<br>"Shame must change sides."</div>
+  <div class="fexit" onclick="qExit()">Leave this site quickly</div>
+</footer>
+
+
+<!-- Firebase SDK -->
+<script>
+// ══════════════════════════════════════
+// FIREBASE CONFIG — replace with yours
+// ══════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyC_SEzRnQul0zVuy5OnGlK6e-Qua_bYrnI",
+  authDomain: "callhimout-8bde0.firebaseapp.com",
+  projectId: "callhimout-8bde0",
+  storageBucket: "callhimout-8bde0.firebasestorage.app",
+  messagingSenderId: "290472489134",
+  appId: "1:290472489134:web:ec3b6b0f20a6f3f4eebd3f",
+  measurementId: "G-P3S3DGKJSF"
+};
+
+let db = null;
+if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    startLiveData();
+  } catch(e) { console.log('Firebase demo mode'); }
+}
+
+// LIVE FIRESTORE LISTENER — updates all counters in real time
+function startLiveData() {
+  // 1. Live stats + heatmap
+  db.collection('stats').doc('global').onSnapshot(doc => {
+    if (!doc.exists) { setCounters(0, 0); return; }
+    const { reports = 0, vibes = 0, byCountry = {} } = doc.data();
+    setCounters(reports, vibes);
+    updateHeatmap(byCountry);
+  });
+
+  // 2. Live stories from Telegram (separate /stories collection, not /reports)
+  db.collection('stories')
+    .orderBy('timestamp', 'desc')
+    .limit(6)
+    .onSnapshot(snap => {
+      const container = document.getElementById('community-stories');
+      if (!container) return;
+      if (snap.empty) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:2.5rem;border:1px dashed var(--grey2);color:var(--grey3)">
+            <div style="font-size:28px;margin-bottom:.75rem">🚩</div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:.5rem">Be the first to share yours.</div>
+            <div style="font-size:12px;line-height:1.7;max-width:280px;margin:0 auto">These women above spoke publicly. You don't have to. Share anonymously via Telegram — your words stay private, your story becomes a shield for the next woman.</div>
+          </div>`;
+        return;
+      }
+      container.innerHTML = '';
+      snap.forEach(doc => {
+        const d = doc.data();
+        const timeAgo = getTimeAgo(d.timestamp?.toDate());
+        container.innerHTML += `
+          <div class="story" style="margin-bottom:1rem">
+            <div class="story-tag">🚩 ${escHtml(d.incidentType || 'Anonymous report')}</div>
+            <div class="story-q">${escHtml(d.story || '')}</div>
+            <div class="story-who" style="display:flex;justify-content:space-between;align-items:center">
+              <span>${escHtml(d.location || 'Undisclosed')}</span>
+              <span style="color:var(--grey3);font-size:11px">Via Telegram · ${timeAgo}</span>
+            </div>
+          </div>`;
+      });
+    });
+}
+
+function getTimeAgo(date) {
+  if (!date) return 'recently';
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 3600)  return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// COUNTERS
+let demoR = 0, demoV = 0;
+function setCounters(r, v) {
+  const fmt = n => n === 0 ? '0' : n.toLocaleString('en-IN');
+  ['t-r','h-r','d-r'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prev = el.textContent;
+    el.textContent = fmt(r);
+    if (prev !== fmt(r) && prev !== '0' && prev !== '—') {
+      el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 500);
+    }
+  });
+  ['t-v','h-v','d-v'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = fmt(v);
+  });
+  const hrd = document.getElementById('h-rd');
+  const drd = document.getElementById('d-rd');
+  if (r === 0) {
+    if (hrd) hrd.textContent = 'Be the first to report →';
+    if (drd) drd.textContent = 'Just launched · via Telegram';
+  } else {
+    if (hrd) hrd.textContent = 'Growing via Telegram';
+    if (drd) drd.textContent = 'Via Telegram · live';
+  }
+}
+if (!db) { setCounters(demoR, demoV); }
+
+// DYNAMIC HEATMAP — colors countries based on real report counts from Firebase
+function updateHeatmap(countryData) {
+  // countryData = { India: 12, USA: 8, UK: 3, ... }
+  const total = Object.values(countryData).reduce((a, b) => a + b, 0);
+  if (total === 0) return; // keep all grey
+
+  const countryIds = {
+    'India': 'india', 'USA': 'usa', 'UK': 'uk', 'Australia': 'aus'
+  };
+
+  Object.entries(countryData).forEach(([country, count]) => {
+    const id = countryIds[country];
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    const pct = count / total;
+    // Color intensity based on share of reports
+    if (pct > 0.3)      { el.style.fill = '#e8001c'; } // dark red
+    else if (pct > 0.15){ el.style.fill = '#ff6060'; } // medium red
+    else if (pct > 0.05){ el.style.fill = '#ffb0b0'; } // light red
+    else if (count > 0) { el.style.fill = '#ffe0e0'; } // very light
+    el.setAttribute('title', `${country}: ${count} reports`);
+  });
+
+  // Update legend numbers
+  const legendItems = document.querySelectorAll('.heatmap-legend-item');
+  Object.entries(countryIds).forEach(([country], i) => {
+    if (legendItems[i]) legendItems[i].textContent = `${country}: ${countryData[country] || 0}`;
+  });
+}
+
+// NAV
+function go(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nl').forEach(n => n.classList.remove('on'));
+  document.getElementById('p-' + id).classList.add('on');
+  document.querySelector('[data-p="' + id + '"]')?.classList.add('on');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(animBars, 150);
+}
+
+// OPEN TELEGRAM
+const TG_BOT = 'https://t.me/callhimout_bot'; // ← replace with your bot username after BotFather setup
+function openTG() { window.open(TG_BOT, '_blank'); }
+
+// EXIT
+function qExit() { window.location.replace('https://weather.com'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') qExit(); });
+
+// ANIMATE BARS
+function animBars() {
+  document.querySelectorAll('[data-w]').forEach(el => {
+    el.style.width = el.getAttribute('data-w');
+  });
+}
+
+// FUND BAR
+setTimeout(() => { const f = document.getElementById('fund-fill'); if (f) f.style.width = '0%'; }, 500);
+
+window.addEventListener('load', () => setTimeout(animBars, 300));
+
+// ══════════════════════════════════════
+// LIVE PLATFORM CHARTS
+// When enough reports exist, redraw charts from real Firestore data
+// Called from startLiveData() once report count > 0
+// ══════════════════════════════════════
+function updatePlatformCharts(reportData) {
+  // reportData = { byIncidentType: {partner_abuse: 12, harassment: 8...},
+  //                byBehavior: {coercion: 20...}, byPerp: {intimate: 15...} }
+  if (!reportData || !reportData.byIncidentType) return;
+
+  const total = Object.values(reportData.byIncidentType).reduce((a, b) => a + b, 0);
+  if (total < 5) return; // wait for meaningful data before replacing benchmarks
+
+  // Hide "global benchmarks" note, show "our data" note
+  const note = document.getElementById('incident-note');
+  if (note) note.textContent = `Based on ${total} reports from our community.`;
+
+  // Update incident type bars
+  const incidentMap = {
+    'Dating or relationship': 'Partner abuse',
+    'Workplace': 'Workplace abuse',
+    'Online only': 'Online abuse',
+    'School or college': 'Other',
+  };
+
+  const bars = document.querySelectorAll('[data-incident-bar]');
+  bars.forEach(bar => {
+    const type = bar.getAttribute('data-incident-bar');
+    const count = reportData.byIncidentType[type] || 0;
+    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+    bar.style.width = pct + '%';
+    const label = bar.closest('.br')?.querySelector('.bv');
+    if (label) label.textContent = pct + '%';
+  });
+}
+
+// Wire into startLiveData — listen for aggregated report stats
+function listenForChartData() {
+  if (!db) return;
+  db.collection('stats').doc('charts').onSnapshot(doc => {
+    if (doc.exists) updatePlatformCharts(doc.data());
+  });
+}
+if (typeof db !== 'undefined' && db) listenForChartData();
+</script>
+</body>
+</html>
